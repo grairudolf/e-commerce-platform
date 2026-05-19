@@ -1,6 +1,6 @@
 # E - COMMERCE - DATABASE
 
-## Members fULL Name Name And Matricule
+## Members Full Name And Matricule
 
   1. TAMOKOUE FOGUE LANDRY BERTHOLD FE24A625..
 
