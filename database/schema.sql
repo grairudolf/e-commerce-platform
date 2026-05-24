@@ -26,6 +26,14 @@ CREATE TABLE vendor (
     created_at         TIMESTAMPTZ    DEFAULT CURRENT_TIMESTAMP
 );
 
+CREATE TABLE delivery_agents (
+    agent_id        UUID           PRIMARY KEY DEFAULT gen_random_uuid(),
+    full_name       VARCHAR(255),
+    phone           VARCHAR(20),
+    vehicle_type    VARCHAR(50),
+    is_active       BOOLEAN        DEFAULT TRUE
+);
+
 CREATE TABLE categories (
     cat_id    UUID         PRIMARY KEY DEFAULT gen_random_uuid(),
     cat_name  VARCHAR(100) NOT NULL UNIQUE
@@ -98,9 +106,9 @@ CREATE TABLE addresses (
 );
 
 CREATE TABLE carts (
-    cart_id     UUID      PRIMARY KEY DEFAULT gen_random_uuid(),
-    customer_id UUID      NOT NULL UNIQUE REFERENCES customer(customer_id) ON DELETE CASCADE,
-    created_at  TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+    cart_id       UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
+    customer_id   UUID        UNIQUE NOT NULLREFERENCES customer(customer_id)  ON DELETE CASCADE,
+    created_at    TIMESTAMP   DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE product (
@@ -122,6 +130,16 @@ CREATE TABLE product_images (
     prod_id   UUID NOT NULL REFERENCES product(prod_id) ON DELETE CASCADE,
     image_url TEXT NOT NULL
 );
+
+CREATE TABLE deliveries (
+    delivery_id     UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
+    order_id        UUID        REFERENCES orders(order_id),
+    agent_id        UUID        REFERENCES delivery_agents(agent_id),
+    delivery_status VARCHAR(20),
+    assigned_at     TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    delivered_at    TIMESTAMP
+);
+
 
 CREATE TABLE product_variants (
     prod_var_id    UUID          PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -162,12 +180,13 @@ CREATE TABLE orders (
 -- ==========================================
 
 CREATE TABLE cart_items (
-    id          UUID      PRIMARY KEY DEFAULT gen_random_uuid(),
-    cart_id     UUID      NOT NULL REFERENCES carts(cart_id)                ON DELETE CASCADE,
-    prod_var_id UUID      NOT NULL REFERENCES product_variants(prod_var_id) ON DELETE CASCADE,
-    quantity    INT       NOT NULL CHECK (quantity > 0),
-    added_at    TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-    UNIQUE (cart_id, prod_var_id)
+    cart_item_id      UUID         PRIMARY KEY DEFAULT gen_random_uuid(),
+    cart_id           UUID         NOT NULL REFERENCES carts(cart_id)  ON DELETE CASCADE,
+    prod_var_id       UUID         NOT NULL  REFERENCES product_variants(prod_var_id) ON DELETE CASCADE,
+    quantity          INT          NOT NULL
+    CHECK(quantity > 0),
+    added_at          TIMESTAMP    DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(cart_id, prod_var_id)
 );
 
 CREATE TABLE inventory (
@@ -195,16 +214,28 @@ CREATE TABLE coupon_usages (
 );
 
 CREATE TABLE payment (
-    payment_id            UUID         PRIMARY KEY DEFAULT gen_random_uuid(),
-    order_id              UUID         NOT NULL REFERENCES orders(order_id)      ON DELETE CASCADE,
-    customer_id           UUID         NOT NULL REFERENCES customer(customer_id) ON DELETE RESTRICT,
-    payment_method        VARCHAR(20)  NOT NULL CHECK (payment_method IN ('MTN_MOMO', 'ORANGE_MONEY')),
-    transaction_reference VARCHAR(100) UNIQUE,
-    phone_number          VARCHAR(9)   NOT NULL,
-    amount                INT          NOT NULL CHECK (amount > 0),
-    currency              VARCHAR(5)   DEFAULT 'XAF',
-    payment_status        VARCHAR(20)  DEFAULT 'pending' CHECK (payment_status IN ('pending', 'successful', 'failed')),
-    created_at            TIMESTAMPTZ    DEFAULT CURRENT_TIMESTAMP
+    payment_id      UUID       PRIMARY KEY DEFAULT gen_random_uuid(),
+    order_id        UUID       NOT NULL REFERENCES orders(order_id) ON DELETE RESTRICT,
+    customer_id     UUID       NOT NULL REFERENCES customer(customer_id)ON DELETE RESTRICT,
+    payment_method  VARCHAR(20)
+    CHECK(payment_method IN (
+        'MTN_MOMO',
+        'ORANGE_MONEY'
+    )),
+    transaction_reference VARCHAR(100)   UNIQUE,
+    phone_number          VARCHAR(20),
+    amount                NUMERIC(12,2)
+	
+    CHECK(amount > 0),
+    currency             VARCHAR(5) DEFAULT 'XAF',
+    payment_status       VARCHAR(20)
+    CHECK(payment_status IN (
+        'pending',
+        'successful',
+        'failed',
+        'refunded'
+    )),
+    created_at         TIMESTAMP     DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE category_promotions (
@@ -235,6 +266,7 @@ CREATE INDEX idx_reviews_customer             ON reviews(customer_id);
 CREATE INDEX idx_reviews_product              ON reviews(product_id);
 CREATE INDEX idx_orders_customer              ON orders(customer_id);
 CREATE INDEX idx_orders_address               ON orders(address_id);
+CREATE INDEX idx_cart_customer                ON carts(customer_id);
 CREATE INDEX idx_cart_items_cart              ON cart_items(cart_id);
 CREATE INDEX idx_cart_items_variant           ON cart_items(prod_var_id);
 CREATE INDEX idx_inventory_variant            ON inventory(prod_var_id);
@@ -242,8 +274,9 @@ CREATE INDEX idx_order_items_order            ON order_items(order_id);
 CREATE INDEX idx_order_items_variant          ON order_items(prod_var_id);
 CREATE INDEX idx_coupon_usages_order          ON coupon_usages(order_id);
 CREATE INDEX idx_coupon_usages_coupon         ON coupon_usages(coupon_id);
-CREATE INDEX idx_payment_order                ON payment(order_id);
 CREATE INDEX idx_payment_customer             ON payment(customer_id);
+CREATE INDEX idx_payment_order                ON payment(order_id);
+CREATE INDEX idx_payment_status               ON payment(payment_status);
 
 
 -- ==========================================
