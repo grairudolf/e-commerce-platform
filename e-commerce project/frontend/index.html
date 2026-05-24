@@ -10,18 +10,21 @@
     <main>
         <h1>Login</h1>
         
-        <input class="inp" type="text" placeholder="Enter Your Username">
+        <input id="username" class="inp" type="text" placeholder="Enter Your Username">
 
-        <input class="inp jjj" type="password" placeholder="Enter Your Password">
+        <input id="password" class="inp jjj" type="password" placeholder="Enter Your Password">
 
         <div class="txt">
             <p><input class="ppp" placeholder="p" type="checkbox">Remember me</p>
             <p>Forgot Password?</p>
         </div>
 
-        <button class="kkk">Log In</button>
+        <button onclick="handlelogin()" class="kkk">Log In</button>
 
         <p class="lll">Dont`t have an account? <a href="#">Register</a></p>
     </main>
+
+    <script src="script.js"></script>
+
 </body>
 </html>
