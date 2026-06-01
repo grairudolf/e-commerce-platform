@@ -1,13 +1,15 @@
-const express = require('express');
-const app = express();
-const port = 3000;
 require('dotenv').config();
 
-// Parse incoming JSON request bodies
+const express = require('express');
+const path = require('path');
+const pool = require('./db');
+
+const app = express();
+const port = process.env.PORT || 3000;
+const frontendPath = path.join(__dirname, '..', 'frontend');
+
 app.use(express.json());
 
-// CORS — allows the frontend (opened from a different port or file)
-// to call this backend without being blocked by the browser
 app.use((req, res, next) => {
     res.header('Access-Control-Allow-Origin', '*');
     res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
@@ -16,21 +18,52 @@ app.use((req, res, next) => {
     next();
 });
 
-// Routes
+app.use(express.static(frontendPath, { index: false }));
 
-app.use('/api/auth',       require('./auth'));
-app.use('/api/products',   require('./products'));
+app.use('/api/auth', require('./auth'));
+app.use('/api/products', require('./products'));
 app.use('/api/categories', require('./categories'));
-app.use('/api/cart',       require('./cart'));
-app.use('/api/orders',     require('./orders'));
-app.use('/api/payments',   require('./payments'));
+app.use('/api/cart', require('./cart'));
+app.use('/api/orders', require('./orders'));
+app.use('/api/payments', require('./payments'));
 
-// Health check
-app.get('/', (req, res) => {
+app.get('/api', (req, res) => {
     res.json({ status: 'Trendora API is running', version: '1.0.0' });
 });
 
-// Global error handler — catches anything the routes don't handle
+app.get('/api/health', async (req, res) => {
+    try {
+        await pool.query('SELECT 1');
+        res.json({ status: 'ok', database: 'connected' });
+    } catch (err) {
+        res.status(503).json({
+            status: 'degraded',
+            database: 'unavailable',
+            error: err.message
+        });
+    }
+});
+
+app.get('/', (req, res) => {
+    res.sendFile(path.join(frontendPath, 'home', 'home.html'));
+});
+
+app.get('/login', (req, res) => {
+    res.sendFile(path.join(frontendPath, 'login', 'login.html'));
+});
+
+app.get('/cart', (req, res) => {
+    res.sendFile(path.join(frontendPath, 'shop-card', 'card.html'));
+});
+
+app.get('/orders', (req, res) => {
+    res.sendFile(path.join(frontendPath, 'order', 'order.html'));
+});
+
+app.get('/product', (req, res) => {
+    res.sendFile(path.join(frontendPath, 'item-details', 'item.html'));
+});
+
 app.use((err, req, res, next) => {
     console.error(err.stack);
     res.status(500).json({ error: 'Something went wrong on the server.' });

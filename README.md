@@ -164,6 +164,21 @@ CREATE DATABASE trendora;
 psql -U postgres -d trendora -f schema.sql
 ```
 
+## Add Demo Data
+
+After the schema is created, load the demo products and test customer:
+
+```bash
+psql -U postgres -d trendora -f seed.sql
+```
+
+Demo login:
+
+```text
+Email: demo@trendora.test
+Password: password123
+```
+
 ---
 
 ## Verify Tables

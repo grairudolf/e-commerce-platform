@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Trendora - Premium Wireless Headphones</title>
+  <link rel="stylesheet" href="itemstyle.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+</head>
+<body>
+  <header class="navbar">
+    <div class="logo">Trendora</div>
+    <input type="text" placeholder="Search for products..." class="search-bar" />
+    <div class="icons">
+      <i onclick="window.location.href='../login/login.html'" class="fa fa-user"></i>
+      <i class="fa fa-shopping-cart"></i>
+    </div>
+  </header>
+
+  <main class="product-page">
+    <div class="product-gallery">
+      <img src="src/pho_01.png" alt="Premium Wireless Headphones" class="main-img" />
+      <div class="thumbnails">
+        <img src="src/pho_01.png" alt="Thumbnail 1" />
+        <img src="src/pho_001.png" alt="Thumbnail 2" />
+        <img src="src/photo_002.png" alt="Thumbnail 3" />
+        <img src="src/photo_003.png" alt="Thumbnail 4" />
+      </div>
+    </div>
+
+    <div class="product-details">
+      <nav class="breadcrumb">
+        Home > Electronics > Headphones
+      </nav>
+
+      <h1>Premium Wireless Headphones</h1>
+      <p class="brand">by AudioTech</p>
+
+      <div class="rating">
+        <span>⭐ 4.5</span> <small>(324 reviews)</small>
+      </div>
+
+      <div class="price">
+        <span class="current">$129.99</span>
+        <span class="old">$159.99</span>
+        <span class="discount">19% OFF</span>
+      </div>
+
+      <p class="description">
+        Experience superior sound quality with these premium wireless headphones. Active noise cancellation, 30-hour battery life, and ultra-comfortable design make these perfect for music lovers and professionals alike.
+      </p>
+
+      <div class="colors">
+        <button class="color-btn">Midnight Black</button>
+        <button class="color-btn">Silver</button>
+        <button class="color-btn">Ocean Blue</button>
+      </div>
+
+      <div class="quantity">
+        <button class="minus">-</button>
+        <input type="number" value="1" min="1" />
+        <button class="plus">+</button>
+      </div>
+
+      <button class="add-cart">Add to Cart</button>
+
+      <ul class="features">
+        <li><i class="fa fa-truck"></i> Free shipping on orders over $50</li>
+        <li><i class="fa fa-undo"></i> 30-day return policy</li>
+        <li><i class="fa fa-shield-alt"></i> 1-year warranty included</li>
+      </ul>
+    </div>
+  </main>
+
+  <section class="reviews">
+    <h2>Customer Reviews</h2>
+
+    <div class="review">
+      <div class="avatar">JD</div>
+      <div class="content">
+        <h4>John Doe <span class="time">2 months ago</span></h4>
+        <p>Absolutely amazing sound quality! The noise cancellation is top-notch and the battery lasts forever. Best purchase I’ve made this year.</p>
+        <div class="stars">⭐⭐⭐⭐⭐</div>
+      </div>
+    </div>
+
+    <div class="review">
+      <div class="avatar">SM</div>
+      <div class="content">
+        <h4>Sarah Miller <span class="time">1 month ago</span></h4>
+        <p>Very comfortable for long listening sessions. The sound is crisp and clear. Only downside is they’re a bit bulky for travel.</p>
+        <div class="stars">⭐⭐⭐⭐</div>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    © 2024 Trendora. All rights reserved.
+  </footer>
+
+  <script src="../api.js"></script>
+  <script src="product.js"></script>
+</body>
+</html>

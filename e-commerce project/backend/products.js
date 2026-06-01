@@ -1,6 +1,6 @@
 const express = require('express');
 const router  = express.Router();
-const pool    = require('../db');
+const pool    = require('./db');
 
 // ─────────────────────────────────────────────
 // GET /api/products
@@ -70,6 +70,28 @@ router.get('/search', async (req, res) => {
 // GET /api/products/:id
 // Returns one product with all its variants and images.
 // ─────────────────────────────────────────────
+router.get('/category/:cat_id', async (req, res) => {
+    try {
+        const result = await pool.query(
+            `SELECT
+                p.prod_id,
+                p.prod_name,
+                p.price,
+                p.prod_description,
+                v.vendor_name,
+                v.brand_name
+             FROM product p
+             JOIN vendor v ON p.vendor_id = v.vendor_id
+             WHERE p.cat_id = $1
+             ORDER BY p.prod_name ASC`,
+            [req.params.cat_id]
+        );
+        res.json(result.rows);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
 router.get('/:id', async (req, res) => {
     try {
         // Main product info
