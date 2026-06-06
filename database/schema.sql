@@ -1,22 +1,19 @@
 CREATE EXTENSION IF NOT EXISTS pgcrypto;
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
-
--- ==========================================
--- LEVEL 1: Independent Tables
--- ==========================================
-
+-- Customer details table
 CREATE TABLE customer (
     customer_id  UUID         PRIMARY KEY DEFAULT gen_random_uuid(),
     first_name   VARCHAR(50)  NOT NULL,
     last_name    VARCHAR(50)  NOT NULL,
     email        VARCHAR(255) NOT NULL UNIQUE,
     phone_num    VARCHAR(20)  NOT NULL,
-    created_at   TIMESTAMPTZ    DEFAULT CURRENT_TIMESTAMP
+    password_hash TEXT        NOT NULL DEFAULT '',
+    preferences  JSONB        DEFAULT '{}'::jsonb,
+    created_at   TIMESTAMPTZ  DEFAULT CURRENT_TIMESTAMP
 );
 
-ALTER TABLE customer ADD COLUMN password_hash TEXT NOT NULL DEFAULT '';
-
+-- Vendor brands table
 CREATE TABLE vendor (
     vendor_id          UUID         PRIMARY KEY DEFAULT gen_random_uuid(),
     brand_name         VARCHAR(255) NOT NULL,
@@ -25,22 +22,25 @@ CREATE TABLE vendor (
     telephone_num      VARCHAR(13)  NOT NULL UNIQUE,
     business_address   TEXT         NOT NULL,
     is_verified        BOOLEAN      DEFAULT FALSE,
-    created_at         TIMESTAMPTZ    DEFAULT CURRENT_TIMESTAMP
+    created_at         TIMESTAMPTZ  DEFAULT CURRENT_TIMESTAMP
 );
 
+-- Shipping agents table
 CREATE TABLE delivery_agents (
     agent_id        UUID           PRIMARY KEY DEFAULT gen_random_uuid(),
-    full_name       VARCHAR(255),
-    phone           VARCHAR(20),
-    vehicle_type    VARCHAR(50),
+    full_name       VARCHAR(255)   NOT NULL,
+    phone           VARCHAR(20)    NOT NULL,
+    vehicle_type    VARCHAR(50)    NOT NULL,
     is_active       BOOLEAN        DEFAULT TRUE
 );
 
+-- Product categories table
 CREATE TABLE categories (
     cat_id    UUID         PRIMARY KEY DEFAULT gen_random_uuid(),
     cat_name  VARCHAR(100) NOT NULL UNIQUE
 );
 
+-- Coupon promotion codes
 CREATE TABLE coupons (
     coupon_id            UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
     code                 VARCHAR(50) NOT NULL UNIQUE,
@@ -53,21 +53,23 @@ CREATE TABLE coupons (
     starts_at            TIMESTAMPTZ,
     expires_at           TIMESTAMPTZ,
     is_active            BOOLEAN     DEFAULT TRUE,
-    created_at           TIMESTAMPTZ   DEFAULT CURRENT_TIMESTAMP
+    created_at           TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
 
+-- Global promotion rules
 CREATE TABLE promotions (
     promotion_id   UUID         PRIMARY KEY DEFAULT gen_random_uuid(),
     title          VARCHAR(255) NOT NULL,
     description    TEXT,
     discount_type  VARCHAR(20)  CHECK (discount_type IN ('percentage', 'fixed')),
-    discount_value INT          NOT NULL,
+    discount_value INT          NOT NULL CHECK (discount_value > 0),
     starts_at      TIMESTAMPTZ,
     expires_at     TIMESTAMPTZ,
     is_active      BOOLEAN      DEFAULT TRUE,
-    created_at     TIMESTAMPTZ    DEFAULT CURRENT_TIMESTAMP
+    created_at     TIMESTAMPTZ  DEFAULT CURRENT_TIMESTAMP
 );
 
+-- Administrative staff accounts
 CREATE TABLE admin (
     admin_id      UUID         PRIMARY KEY DEFAULT gen_random_uuid(),
     full_name     VARCHAR(255) NOT NULL,
@@ -75,66 +77,62 @@ CREATE TABLE admin (
     password_hash TEXT         NOT NULL,
     is_active     BOOLEAN      DEFAULT TRUE,
     last_login    TIMESTAMPTZ,
-    created_at    TIMESTAMPTZ    DEFAULT CURRENT_TIMESTAMP,
-    updated_at    TIMESTAMPTZ    DEFAULT CURRENT_TIMESTAMP
+    created_at    TIMESTAMPTZ  DEFAULT CURRENT_TIMESTAMP,
+    updated_at    TIMESTAMPTZ  DEFAULT CURRENT_TIMESTAMP
 );
 
+-- Administrative roles/permissions
 CREATE TABLE permissions (
     permission_id   UUID         PRIMARY KEY DEFAULT gen_random_uuid(),
     permission_name VARCHAR(100) NOT NULL UNIQUE,
     description     TEXT,
-    created_at      TIMESTAMPTZ    DEFAULT CURRENT_TIMESTAMP
+    created_at      TIMESTAMPTZ  DEFAULT CURRENT_TIMESTAMP
 );
 
-
--- ==========================================
--- LEVEL 2: First-Tier Dependencies
--- ==========================================
-
+-- Admin permission mapping
 CREATE TABLE admin_permissions (
-    admin_id      UUID      NOT NULL REFERENCES admin(admin_id)            ON DELETE CASCADE,
+    admin_id      UUID      NOT NULL REFERENCES admin(admin_id) ON DELETE CASCADE,
     permission_id UUID      NOT NULL REFERENCES permissions(permission_id) ON DELETE CASCADE,
     granted_at    TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (admin_id, permission_id)
 );
 
+-- Customer shipping addresses
 CREATE TABLE addresses (
     address_id   UUID         PRIMARY KEY DEFAULT gen_random_uuid(),
     customer_id  UUID         NOT NULL REFERENCES customer(customer_id) ON DELETE CASCADE,
-    region       VARCHAR(20)  NOT NULL,
-    city         VARCHAR(20)  NOT NULL,
+    region       VARCHAR(50)  NOT NULL,
+    city         VARCHAR(50)  NOT NULL,
     address_line VARCHAR(255) NOT NULL,
-    created_at   TIMESTAMPTZ    DEFAULT CURRENT_TIMESTAMP
+    created_at   TIMESTAMPTZ  DEFAULT CURRENT_TIMESTAMP
 );
 
+-- Customer shopping carts
 CREATE TABLE carts (
     cart_id       UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
-    customer_id   UUID        UNIQUE NOT NULL REFERENCES customer(customer_id)  ON DELETE CASCADE,
-    created_at    TIMESTAMPTZ   DEFAULT CURRENT_TIMESTAMP
+    customer_id   UUID        UNIQUE NOT NULL REFERENCES customer(customer_id) ON DELETE CASCADE,
+    created_at    TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
 
+-- Products catalog table
 CREATE TABLE product (
     prod_id          UUID          PRIMARY KEY DEFAULT gen_random_uuid(),
-    vendor_id        UUID          REFERENCES vendor(vendor_id)     ON DELETE SET NULL,
-    cat_id           UUID          REFERENCES categories(cat_id)    ON DELETE SET NULL,
+    vendor_id        UUID          REFERENCES vendor(vendor_id) ON DELETE SET NULL,
+    cat_id           UUID          REFERENCES categories(cat_id) ON DELETE SET NULL,
     prod_name        VARCHAR(100)  NOT NULL,
     price            NUMERIC(12,2) NOT NULL CHECK (price >= 0),
-    prod_description TEXT
+    prod_description TEXT,
+    attributes       JSONB         DEFAULT '{}'::jsonb
 );
 
-
--- ==========================================
--- LEVEL 3: Second-Tier Dependencies
--- ==========================================
-
+-- Product gallery images
 CREATE TABLE product_images (
     id        UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     prod_id   UUID NOT NULL REFERENCES product(prod_id) ON DELETE CASCADE,
     image_url TEXT NOT NULL
 );
 
-
-
+-- Product option variants
 CREATE TABLE product_variants (
     prod_var_id    UUID          PRIMARY KEY DEFAULT gen_random_uuid(),
     prod_id        UUID          NOT NULL REFERENCES product(prod_id) ON DELETE CASCADE,
@@ -142,55 +140,59 @@ CREATE TABLE product_variants (
     prod_color     VARCHAR(30),
     prod_price     NUMERIC(12,2) CHECK (prod_price > 0),
     stock_quantity INT           NOT NULL CHECK (stock_quantity >= 0),
-    created_at     TIMESTAMPTZ     DEFAULT CURRENT_TIMESTAMP
+    options        JSONB         DEFAULT '{}'::jsonb,
+    created_at     TIMESTAMPTZ   DEFAULT CURRENT_TIMESTAMP
 );
 
+-- Customer reviews
 CREATE TABLE reviews (
     review_id   UUID      PRIMARY KEY DEFAULT gen_random_uuid(),
     customer_id UUID      REFERENCES customer(customer_id) ON DELETE SET NULL,
     product_id  UUID      NOT NULL REFERENCES product(prod_id) ON DELETE CASCADE,
+    rating      INT       NOT NULL CHECK (rating BETWEEN 1 AND 5),
     comment     TEXT,
     created_at  TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     updated_at  TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     UNIQUE (customer_id, product_id)
 );
 
+-- Orders catalog table
 CREATE TABLE orders (
     order_id       UUID          PRIMARY KEY DEFAULT gen_random_uuid(),
     customer_id    UUID          NOT NULL REFERENCES customer(customer_id) ON DELETE RESTRICT,
-    address_id     UUID          REFERENCES addresses(address_id)          ON DELETE RESTRICT,
+    address_id     UUID          REFERENCES addresses(address_id) ON DELETE RESTRICT,
     order_number   VARCHAR(50)   NOT NULL UNIQUE,
     total_amount   NUMERIC(12,2) NOT NULL CHECK (total_amount >= 0),
     payment_method VARCHAR(50),
     payment_status VARCHAR(20)   DEFAULT 'pending',
     order_status   VARCHAR(20)   DEFAULT 'pending',
     order_notes    TEXT,
-    placed_at      TIMESTAMPTZ     DEFAULT CURRENT_TIMESTAMP
+    metadata       JSONB         DEFAULT '{}'::jsonb,
+    placed_at      TIMESTAMPTZ   DEFAULT CURRENT_TIMESTAMP
 );
 
+-- Order shipment assignments
 CREATE TABLE deliveries (
-    delivery_id     UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
-    order_id        UUID        REFERENCES orders(order_id),
-    agent_id        UUID        REFERENCES delivery_agents(agent_id),
-    delivery_status VARCHAR(20),
-    assigned_at     TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-    delivered_at    TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+    delivery_id      UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
+    order_id         UUID        REFERENCES orders(order_id) ON DELETE CASCADE,
+    agent_id         UUID        REFERENCES delivery_agents(agent_id) ON DELETE SET NULL,
+    delivery_status  VARCHAR(20) DEFAULT 'pending',
+    tracking_history JSONB       DEFAULT '[]'::jsonb,
+    assigned_at      TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    delivered_at     TIMESTAMPTZ
 );
 
--- ==========================================
--- LEVEL 4: Junction & Transactional Tables
--- ==========================================
-
+-- Items inside customer carts
 CREATE TABLE cart_items (
     cart_item_id      UUID         PRIMARY KEY DEFAULT gen_random_uuid(),
-    cart_id           UUID         NOT NULL REFERENCES carts(cart_id)  ON DELETE CASCADE,
-    prod_var_id       UUID         NOT NULL  REFERENCES product_variants(prod_var_id) ON DELETE CASCADE,
-    quantity          INT          NOT NULL
-    CHECK(quantity > 0),
-    added_at          TIMESTAMPTZ    DEFAULT CURRENT_TIMESTAMP,
+    cart_id           UUID         NOT NULL REFERENCES carts(cart_id) ON DELETE CASCADE,
+    prod_var_id       UUID         NOT NULL REFERENCES product_variants(prod_var_id) ON DELETE CASCADE,
+    quantity          INT          NOT NULL CHECK(quantity > 0),
+    added_at          TIMESTAMPTZ  DEFAULT CURRENT_TIMESTAMP,
     UNIQUE(cart_id, prod_var_id)
 );
 
+-- Stock inventory ledger
 CREATE TABLE inventory (
     id          UUID      PRIMARY KEY DEFAULT gen_random_uuid(),
     prod_var_id UUID      NOT NULL REFERENCES product_variants(prod_var_id) ON DELETE CASCADE,
@@ -199,64 +201,53 @@ CREATE TABLE inventory (
     updated_at  TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
 
+-- Items inside finalized orders
 CREATE TABLE order_items (
     items_id    UUID          PRIMARY KEY DEFAULT gen_random_uuid(),
-    order_id    UUID          NOT NULL REFERENCES orders(order_id)               ON DELETE CASCADE,
-    prod_var_id UUID          NOT NULL REFERENCES product_variants(prod_var_id)  ON DELETE RESTRICT,
+    order_id    UUID          NOT NULL REFERENCES orders(order_id) ON DELETE CASCADE,
+    prod_var_id UUID          NOT NULL REFERENCES product_variants(prod_var_id) ON DELETE RESTRICT,
     quantity    INT           NOT NULL CHECK (quantity > 0),
     unit_price  NUMERIC(12,2) NOT NULL CHECK (unit_price > 0)
 );
 
+-- Coupons usage ledger
 CREATE TABLE coupon_usages (
     coupon_usage_id UUID      PRIMARY KEY DEFAULT gen_random_uuid(),
-    coupon_id       UUID      REFERENCES coupons(coupon_id)    ON DELETE SET NULL,
+    coupon_id       UUID      REFERENCES coupons(coupon_id) ON DELETE SET NULL,
     customer_id     UUID      REFERENCES customer(customer_id) ON DELETE SET NULL,
-    order_id        UUID      REFERENCES orders(order_id)      ON DELETE CASCADE,
+    order_id        UUID      REFERENCES orders(order_id) ON DELETE CASCADE,
     used_at         TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
 
+-- Mobile money transactions table
 CREATE TABLE payment (
     payment_id      UUID       PRIMARY KEY DEFAULT gen_random_uuid(),
     order_id        UUID       NOT NULL REFERENCES orders(order_id) ON DELETE RESTRICT,
-    customer_id     UUID       NOT NULL REFERENCES customer(customer_id)ON DELETE RESTRICT,
-    payment_method  VARCHAR(20)
-    CHECK(payment_method IN (
-        'MTN_MOMO',
-        'ORANGE_MONEY'
-    )),
-    transaction_reference VARCHAR(100)   UNIQUE,
+    customer_id     UUID       NOT NULL REFERENCES customer(customer_id) ON DELETE RESTRICT,
+    payment_method  VARCHAR(20) CHECK(payment_method IN ('MTN_MOMO', 'ORANGE_MONEY')),
+    transaction_reference VARCHAR(100) UNIQUE,
     phone_number          VARCHAR(20),
-    amount                NUMERIC(12,2)
-	
-    CHECK(amount > 0),
+    amount                NUMERIC(12,2) CHECK(amount > 0),
     currency             VARCHAR(5) DEFAULT 'XAF',
-    payment_status       VARCHAR(20)
-    CHECK(payment_status IN (
-        'pending',
-        'successful',
-        'failed',
-        'refunded'
-    )),
-    created_at         TIMESTAMPTZ     DEFAULT CURRENT_TIMESTAMP
+    payment_status       VARCHAR(20) CHECK(payment_status IN ('pending', 'successful', 'failed', 'refunded')),
+    created_at         TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
 
+-- Category promotions mapping
 CREATE TABLE category_promotions (
-    category_id  UUID REFERENCES categories(cat_id)       ON DELETE CASCADE,
+    category_id  UUID REFERENCES categories(cat_id) ON DELETE CASCADE,
     promotion_id UUID REFERENCES promotions(promotion_id) ON DELETE CASCADE,
     PRIMARY KEY (category_id, promotion_id)
 );
 
+-- Product promotions mapping
 CREATE TABLE product_promotions (
-    product_id   UUID REFERENCES product(prod_id)         ON DELETE CASCADE,
+    product_id   UUID REFERENCES product(prod_id) ON DELETE CASCADE,
     promotion_id UUID REFERENCES promotions(promotion_id) ON DELETE CASCADE,
     PRIMARY KEY (product_id, promotion_id)
 );
 
-
--- ==========================================
--- INDEXES
--- ==========================================
-
+-- Create table indexes for optimization
 CREATE INDEX idx_admin_permissions_admin      ON admin_permissions(admin_id);
 CREATE INDEX idx_admin_permissions_permission ON admin_permissions(permission_id);
 CREATE INDEX idx_addresses_customer           ON addresses(customer_id);
@@ -280,11 +271,7 @@ CREATE INDEX idx_payment_customer             ON payment(customer_id);
 CREATE INDEX idx_payment_order                ON payment(order_id);
 CREATE INDEX idx_payment_status               ON payment(payment_status);
 
-
--- ==========================================
--- SEED: PERMISSIONS
--- ==========================================
-
+-- Seed permissions
 INSERT INTO permissions (permission_name, description) VALUES
     ('manage_users',         'Create, edit, suspend, and delete customer accounts'),
     ('manage_admins',        'Grant and revoke permissions for other administrators'),
@@ -302,5 +289,5 @@ INSERT INTO permissions (permission_name, description) VALUES
     ('manage_support',       'Respond to and resolve customer support tickets'),
     ('manage_notifications', 'Send system notifications and announcements'),
     ('manage_settings',      'Modify platform configuration and system settings'),
-    ('view_reports',         'Access analytics, sales, and performance reports');
-	
+    ('view_reports',         'Access analytics, sales, and performance reports')
+    ON CONFLICT (permission_name) DO NOTHING;

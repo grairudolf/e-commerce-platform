@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Trendora - Product Details</title>
+  <link rel="stylesheet" href="../style.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link rel="manifest" href="../manifest.json">
+  <meta name="theme-color" content="#F27F1B">
+  <meta name="description" content="View detailed product information, specifications, variants, and reviews on Trendora.">
+</head>
+<body>
+  <header class="navbar">
+    <div class="logo" onclick="window.location.href='home.html'">Trendora</div>
+    <input type="text" placeholder="Search for products..." class="search-bar" id="nav-search" />
+    <div class="icons">
+      <i onclick="logoutCustomer()" class="fa fa-sign-out-alt" title="Sign Out"></i>
+      <i onclick="window.location.href='cart.html'" class="fa fa-shopping-cart" title="View Cart">
+        <span class="badge" id="cart-count">0</span>
+      </i>
+      <i onclick="window.location.href='orders.html'" class="fa fa-box-open" title="My Orders"></i>
+    </div>
+  </header>
+
+  <main class="product-page" id="product-details-container">
+    <!-- Main product details loaded dynamically -->
+  </main>
+
+  <section class="reviews">
+    <h2>Customer Reviews</h2>
+    
+    <!-- Add review form -->
+    <div class="review-form-container">
+      <h3>Write a Review</h3>
+      <form class="review-form" id="add-review-form">
+        <div class="star-rating" id="rating-stars">
+          <i class="fa fa-star" data-rating="1"></i>
+          <i class="fa fa-star" data-rating="2"></i>
+          <i class="fa fa-star" data-rating="3"></i>
+          <i class="fa fa-star" data-rating="4"></i>
+          <i class="fa fa-star" data-rating="5"></i>
+        </div>
+        <textarea id="review-comment" placeholder="Tell us about your experience with this product..." required></textarea>
+        <button type="submit">Submit Review</button>
+      </form>
+    </div>
+
+    <div id="reviews-list">
+      <!-- Reviews loaded dynamically -->
+    </div>
+  </section>
+
+  <footer>
+    © 2026 Trendora. All rights reserved. Premium Cameroon e-commerce platform.
+  </footer>
+
+  <script src="../api.js"></script>
+  <script src="products.js"></script>
+</body>
+</html>

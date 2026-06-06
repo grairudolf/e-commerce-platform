@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Trendora - Shopping Cart & Checkout</title>
+  <link rel="stylesheet" href="../style.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link rel="manifest" href="../manifest.json">
+  <meta name="theme-color" content="#F27F1B">
+  <meta name="description" content="Manage your shopping cart, review items, apply coupons, and checkout securely on Trendora.">
+</head>
+<body>
+  <header class="navbar">
+    <div class="logo" onclick="window.location.href='home.html'">Trendora</div>
+    <input type="text" placeholder="Search for products..." class="search-bar" id="nav-search" />
+    <div class="icons">
+      <i onclick="logoutCustomer()" class="fa fa-sign-out-alt" title="Sign Out"></i>
+      <i onclick="window.location.href='cart.html'" class="fa fa-shopping-cart" title="View Cart">
+        <span class="badge" id="cart-count">0</span>
+      </i>
+      <i onclick="window.location.href='orders.html'" class="fa fa-box-open" title="My Orders"></i>
+    </div>
+  </header>
+
+  <main class="cart-container">
+    <section class="cart-items">
+      <h2>Shopping Cart</h2>
+      <p id="item-count-label">0 items in your cart</p>
+
+      <div id="cart-list">
+        <!-- Cart items loaded dynamically -->
+      </div>
+
+      <a href="home.html" class="continue-shopping"><i class="fa fa-arrow-left"></i> Continue Shopping</a>
+    </section>
+
+    <aside class="summary">
+      <h3>Order Summary</h3>
+      <div class="summary-item">
+        <span>Subtotal</span>
+        <span id="subtotal-amount">$0.00</span>
+      </div>
+      <div class="summary-item">
+        <span>Shipping</span>
+        <span class="free">Free</span>
+      </div>
+      <div class="summary-item">
+        <span>Tax (10%)</span>
+        <span id="tax-amount">$0.00</span>
+      </div>
+      
+      <!-- Promo Section -->
+      <div class="promo">
+        <input type="text" id="promo-code" placeholder="Enter promo code" />
+        <button type="button" id="apply-promo-btn">Apply</button>
+      </div>
+      <div id="promo-status" style="font-size: 0.85rem; margin-top: -1rem; margin-bottom: 1rem; display: none;"></div>
+
+      <div class="summary-total">
+        <span>Total</span>
+        <span class="total-price" id="total-amount">$0.00</span>
+      </div>
+
+      <!-- Payment details (Momo/Orange Money integration!) -->
+      <div style="border-top: 1px solid var(--line); padding-top: 1.5rem; margin-top: 1.5rem; display: flex; flex-direction: column; gap: 1rem;">
+        <h4 style="font-weight: 600;">Payment & Shipping Address</h4>
+        
+        <label for="shipping-address" style="font-size: 0.85rem; font-weight: 600; color: var(--ink);">Delivery Address</label>
+        <input type="text" id="shipping-address" placeholder="123 Molyko, Buea, Cameroon" style="padding: 0.75rem 1rem; border-radius: var(--radius-sm); border: 1px solid var(--line); font-size: 0.9rem;" required />
+        
+        <label for="payment-method" style="font-size: 0.85rem; font-weight: 600; color: var(--ink);">Select Payment Method</label>
+        <select id="payment-method" style="padding: 0.75rem 1rem; border-radius: var(--radius-sm); border: 1px solid var(--line); font-size: 0.9rem; background: var(--paper);">
+          <option value="MTN_MOMO">MTN Mobile Money</option>
+          <option value="ORANGE_MONEY">Orange Money</option>
+        </select>
+        
+        <label for="payment-phone" style="font-size: 0.85rem; font-weight: 600; color: var(--ink);">Payment Phone Number</label>
+        <input type="tel" id="payment-phone" placeholder="+237650000000" style="padding: 0.75rem 1rem; border-radius: var(--radius-sm); border: 1px solid var(--line); font-size: 0.9rem;" required />
+      </div>
+
+      <button type="button" class="checkout-btn" id="checkout-btn" style="margin-top: 1.5rem;">Proceed to Checkout</button>
+      <p class="secure"><i class="fa fa-lock"></i> Secure checkout powered by MOMO API</p>
+    </aside>
+  </main>
+
+  <footer>
+    © 2026 Trendora. All rights reserved. Premium Cameroon e-commerce platform.
+  </footer>
+
+  <script src="../api.js"></script>
+  <script src="cart.js"></script>
+</body>
+</html>

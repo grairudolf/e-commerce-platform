@@ -27,10 +27,13 @@ This project was developed as coursework for Database Design and Optimization un
 ## Backend
 - Node.js
 - Express.js
+- jsonwebtoken
+- helmet
+- express-rate-limit
 
 ## Frontend
 - HTML
-- CSS
+- CSS (Vanilla, Custom UI Theme)
 - JavaScript
 
 ---
@@ -42,9 +45,11 @@ This project was developed as coursework for Database Design and Optimization un
 - Shopping cart and order management
 - Inventory tracking
 - Coupon and promotion system
-- Mobile money payment support
+- Mobile money payment support (MTN MoMo & Orange Money billing flows)
 - Role-based admin permissions
 - UUID-based relational schema
+- PWA Integration with offline asset support
+- Security (JWT sessions, Helmet protection, rate limiting, and database RLS)
 
 ---
 
@@ -54,17 +59,26 @@ This project was developed as coursework for Database Design and Optimization un
 Trendora/
 ├── README.md
 ├── database/
-│   └── schema.sql
-│
-└── e-commerce project/
-    ├── backend/
-    │   ├── package.json
-    │   └── server.js
-    │
-    └── frontend/
-        ├── index.html
-        ├── scrpt.js
-        └── style.css
+│   ├── schema.sql       (DB tables/seed/indexes)
+│   ├── auditing.sql     (Audit triggers/logs)
+│   ├── caching.sql      (Materialized views)
+│   └── security.sql     (RLS policies & Roles)
+├── backend/
+│   ├── package.json     (Security dependencies)
+│   ├── server.js        (Secure Express server)
+│   ├── middleware.js    (JWT, validations, limits)
+│   └── db.js            (Postgres pool)
+└── frontend/
+    ├── index.html       (Unified Login/Register page)
+    ├── style.css        (Premium CSS variables & tokens)
+    ├── api.js           (Fetch agent + auto JWT header)
+    ├── sw.js            (PWA Service Worker offline caching)
+    ├── manifest.json    (PWA manifest app specs)
+    └── pages/           (Dynamic subviews)
+        ├── home.html
+        ├── products.html
+        ├── cart.html
+        └── orders.html
 ```
 
 ---
@@ -161,7 +175,7 @@ CREATE DATABASE trendora;
 ## Run Schema File
 
 ```bash
-psql -U postgres -d trendora -f schema.sql
+psql -U postgres -d trendora -f database/schema.sql
 ```
 
 ## Add Demo Data
@@ -169,7 +183,7 @@ psql -U postgres -d trendora -f schema.sql
 After the schema is created, load the demo products and test customer:
 
 ```bash
-psql -U postgres -d trendora -f seed.sql
+psql -U postgres -d trendora -f database/seed.sql
 ```
 
 Demo login:
@@ -194,7 +208,7 @@ Password: password123
 Move into the backend folder:
 
 ```bash
-cd "e-commerce project/backend"
+cd backend
 ```
 
 Install dependencies:
@@ -219,11 +233,11 @@ http://localhost:3000
 
 # Current Status
 
-| Component | Status |
-|---|---|
-| Database Schema | Completed |
-| Backend API | In Progress |
-| Frontend UI | In Progress |
+| Component | Status | Description |
+|---|---|---|
+| Database Schema | Completed | PostgreSQL relational schema with audits, caching views, and RLS policies. |
+| Backend API | Completed | Secure REST API with JWT Auth, Helmet headers, rate limiters, and MoMo checkout flows. |
+| Frontend UI | Completed | Premium PWA UI matching Figma screen specs, responsive details, MoMo billing. |
 
 ---
 

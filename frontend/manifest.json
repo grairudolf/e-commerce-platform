@@ -1,0 +1,22 @@
+{
+  "short_name": "Trendora",
+  "name": "Trendora Premium E-Commerce Store",
+  "icons": [
+    {
+      "src": "src/login-img.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "src/login-img.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ],
+  "start_url": "/index.html",
+  "background_color": "#FFFFFF",
+  "theme_color": "#F27F1B",
+  "display": "standalone",
+  "orientation": "portrait",
+  "scope": "/"
+}
