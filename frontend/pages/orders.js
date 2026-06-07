@@ -49,6 +49,9 @@ function renderOrders() {
                 </div>
                 <div class="order-actions">
                     <button class="primary" type="button" data-action="details">View Details</button>
+                    ${order.order_status.toUpperCase() === 'PENDING' ? `<button class="primary" type="button" data-action="deliver">Confirm Delivery</button>` : ''}
+                    ${order.order_status.toUpperCase() === 'DELIVERED' ? `<button class="secondary" type="button" data-action="return">Request Return</button>
+                                                            <button class="secondary" type="button" data-action="refund">Request Refund</button>` : ''}
                     <button class="secondary" type="button" data-action="payment">${order.payment_status.toUpperCase()}</button>
                 </div>
                 <div class="order-details-pane" style="display: none; border-top: 1px solid var(--line); margin-top: 1rem; padding-top: 1rem;">
@@ -92,6 +95,42 @@ ordersContainer?.addEventListener('click', async (event) => {
                 detailsPane.innerHTML = `<p style="color: var(--red); text-align: center;">Failed: ${err.message}</p>`;
             }
         }
+    } else if (action === 'deliver') {
+        try {
+            await apiRequest(`/api/orders/${orderId}/deliver`, { method: 'PATCH' });
+            alert('Delivery confirmed! Funds are released.');
+            loadOrders();
+        } catch (err) {
+            alert(err.message);
+        }
+    } else if (action === 'refund') {
+        const reason = prompt('Please enter a reason for the refund (Must be within 7 days):');
+        if (reason) {
+            try {
+                await apiRequest(`/api/orders/${orderId}/refund`, {
+                    method: 'POST',
+                    body: JSON.stringify({ reason })
+                });
+                alert('Refund requested successfully.');
+                loadOrders();
+            } catch (err) {
+                alert(err.message);
+            }
+        }
+    } else if (action === 'return') {
+        const reason = prompt('Please enter a reason for returning the item(s):');
+        if (reason) {
+            try {
+                await apiRequest(`/api/orders/${orderId}/return`, {
+                    method: 'POST',
+                    body: JSON.stringify({ reason })
+                });
+                alert('Return requested successfully.');
+                loadOrders();
+            } catch (err) {
+                alert(err.message);
+            }
+        }
     }
 });
 
@@ -104,13 +143,16 @@ function renderOrderDetails(pane, order) {
         <div style="display: flex; flex-direction: column; gap: 0.8rem;">
             ${order.items.map(item => `
                 <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px dashed var(--line); padding-bottom: 0.5rem;">
-                    <div>
-                        <p style="font-weight: 600; font-size: 0.95rem;">${item.prod_name}</p>
-                        <p style="color: var(--muted); font-size: 0.8rem;">
-                            Brand: ${item.vendor_name || 'Trendora'} 
-                            ${item.prod_size ? `| Size: ${item.prod_size}` : ''} 
-                            ${item.prod_color ? `| Color: ${item.prod_color}` : ''}
-                        </p>
+                    <div style="display: flex; gap: 1rem; align-items: center;">
+                        <img src="${productImage(item)}" alt="${item.prod_name}" style="width: 50px; height: 50px; object-fit: cover; border-radius: var(--radius-sm);" onerror="this.src='../src/shoe.png'" />
+                        <div>
+                            <p style="font-weight: 600; font-size: 0.95rem;">${item.prod_name}</p>
+                            <p style="color: var(--muted); font-size: 0.8rem;">
+                                Brand: ${item.vendor_name || 'Trendora'} 
+                                ${item.prod_size ? `| Size: ${item.prod_size}` : ''} 
+                                ${item.prod_color ? `| Color: ${item.prod_color}` : ''}
+                            </p>
+                        </div>
                     </div>
                     <div style="text-align: right;">
                         <p style="font-weight: 600; color: var(--primary);">${money(item.unit_price)}</p>

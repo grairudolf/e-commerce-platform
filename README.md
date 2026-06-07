@@ -241,6 +241,33 @@ http://localhost:3000
 
 ---
 
+# System Architecture & Key Mechanisms
+
+## Permission-Based Access Control (PBAC)
+
+Instead of traditional Role-Based Access Control (RBAC), Trendora utilizes a more granular **Permission-Based Access Control (PBAC)** model.
+
+- **Implementation**: Instead of assigning a blanket role (e.g., "Manager"), administrators are granted specific permissions via the `admin_permissions` junction table linking `admin_id` to `permission_id`.
+- **Why PBAC?**: It prevents privilege escalation and ensures the principle of least privilege. If a support staff only needs to process refunds, they receive `can_refund_orders` without gaining access to the entire order management suite.
+- **Database Enforcement**: Row-level security and backend middleware strictly verify these specific tokens rather than a user's role.
+
+## Coupon and Voucher System
+
+Trendora includes a robust promotion engine:
+- Coupons are configured in the `coupons` table with constraints such as `discount_type` (`PERCENTAGE` or `FIXED`), `min_purchase_amount`, `valid_until`, and `max_uses`.
+- When users enter a code, the backend automatically validates conditions and locks the usage limit row.
+- **Demo Codes to Try**:
+  - `WELCOME10`: 10% off your purchase.
+  - `FASHION500`: Flat 500 FCFA discount for cart totals exceeding 10,000 FCFA.
+
+## Concurrency and Row-Level Blocking
+
+To prevent race conditions during high-traffic checkout flows or simultaneous refund requests, the database utilizes **Row-Level Blocking**:
+- Transactions use `SELECT ... FOR UPDATE` when calculating final payouts or modifying inventory.
+- This effectively locks the row, ensuring two concurrent requests cannot over-refund an order or sell an item that just went out of stock.
+
+---
+
 # Team Members
 
 | Name | Matricule |

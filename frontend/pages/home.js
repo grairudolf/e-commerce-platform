@@ -125,6 +125,7 @@ searchInput?.addEventListener('input', () => {
         await updateCartCount();
         await loadCategories();
         await loadProducts();
+        // Global scripts in api.js now handle loading notifications and support
     } catch (err) {
         console.error(err);
     }
